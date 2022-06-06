@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-video_src = 'pothole.mp4'
+video_src = 'tire.mp4'
 
 cap = cv2.VideoCapture(video_src)
 
@@ -30,6 +30,7 @@ while (cap.isOpened()):
     circles = cv2.HoughCircles(img,
                         cv2.HOUGH_GRADIENT, 1, 20, param1 = 50,
                     param2 = 30, minRadius = 100, maxRadius = 200)
+                    
 
     circles = np.uint16(np.around(circles))
 
