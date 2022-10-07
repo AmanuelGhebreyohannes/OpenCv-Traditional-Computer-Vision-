@@ -80,6 +80,7 @@ for bbox in bboxes:
 # Process video and track objects
 while cap.isOpened():
   success, frame = cap.read()
+  frame_counter +=1
   
   
   if not success:
@@ -97,10 +98,11 @@ while cap.isOpened():
 
   # show frame
   cv2.imshow('MultiTracker', frame)
-  if(frame_counter%2==0):
-    frame_counter +=1
+  if(frame_counter%30==0):
     bbox2=(231, 185, 73, 188)#[(569, 179, 75, 159), (231, 185, 73, 188), (754, 210, 76, 211)]
-    #multiTracker.clear()
+    colors.append((randint(0, 255), randint(0, 255), randint(0, 255)))
+    del multiTracker
+    multiTracker = cv2.MultiTracker_create()
     multiTracker.add(createTrackerByName(trackerType), frame, bbox2)
 
   # quit on ESC button
