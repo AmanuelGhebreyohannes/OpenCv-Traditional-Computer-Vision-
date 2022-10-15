@@ -132,8 +132,13 @@ colors = []
 # Specify the tracker type
 trackerType = trackerTypes[0]#"CSRT"    
 
-# Create MultiTracker object
-multiTracker = cv2.MultiTracker_create()
+# Create single tracker object
+trackers=[]
+tracker = createTrackerByName(trackerType)
+trackers.append(tracker)
+trackers.append(tracker)
+trackers.append(tracker)
+
 
 
 
@@ -148,23 +153,23 @@ while cap.isOpened():
   
   if not success:
     break
+  for i in range(3):
+    # get updated location of objects in subsequent frames
+    success, box = trackers[i].update(frame)
+    #print(len(boxes),frame_counter)
 
-  # get updated location of objects in subsequent frames
-  success, boxes = multiTracker.update(frame)
-  #print(len(boxes),frame_counter)
-
-  # draw tracked objects
-  for i, newbox in enumerate(boxes):
-    p1 = (int(newbox[0]), int(newbox[1]))
-    p2 = (int(newbox[0] + newbox[2]), int(newbox[1] + newbox[3]))
-    cv2.rectangle(frame, p1, p2, colors[i], 2, 1)
+    # draw tracked object
+    if success:
+        (x, y, w, h) = [int(v) for v in box]
+        cv2.rectangle(frame, (x, y), (x + w, y + h),
+          (0, 255, 0), 2)
 
   # show frame
   cv2.imshow('MultiTracker', frame)
   cv2.putText(frame,"Hello",
                     (50,50),cv2.FONT_HERSHEY_SIMPLEX,0.6,(0,0,255),2)
   
-  if(frame_counter%2==0):
+  if(frame_counter%12==0):
     #bbox2=(231, 185, 73, 188)
     result = detectObject(frame)
     if(len(result)>0):
@@ -172,12 +177,16 @@ while cap.isOpened():
       x,y,w,h = result[0][0],result[0][1],result[0][2],result[0][3]
       cv2.rectangle(frame,(x,y),(w,h),(255,255,0),2)
       colors.append((randint(0, 255), randint(0, 255), randint(0, 255)))
+      del(trackers[0])
+      trackers.append(createTrackerByName(trackerType))
+      if(w-x>0 and h-y >0 and x>0 and y>0):
+        trackers[0].init(frame, (x,y,w-x,h-y))
       # del multiTracker
       # multiTracker = cv2.MultiTracker_create()
-      multiTracker.add(createTrackerByName(trackerType), frame, (x,y,w-x,h-y))
+      #multiTracker.add(createTrackerByName(trackerType), frame, (x,y,w-x,h-y))
   
   fps.stop()
-  print(fps.elapsed())
+  print(1/fps.elapsed())
   
   
   #cv2.imshow("Image",frame)
