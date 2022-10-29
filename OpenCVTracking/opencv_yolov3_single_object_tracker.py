@@ -106,7 +106,16 @@ def detectObject(img):
   detections = findObjects(outputs,img)
   return detections
 
-
+def findclosest(position, trackerlist,visiitedlist):
+  min_index = 0
+  min = 500
+  for i in range(len(trackerlist)):
+    if(abs(i-position)> min):
+      min = abs(i-position)
+      min_index=i
+  if(min < 100 and not min_index in visiitedlist):
+    return min_index
+  return -1
 
 
 
@@ -126,7 +135,10 @@ if not success:
   sys.exit(1)
 ## Select boxes
 bboxes = []
-colors = [] 
+colors = []
+
+midpoint_tracker = [0,0,0]
+midpoint_detector = [0,0,0]
 
 
 # Specify the tracker type
@@ -134,12 +146,17 @@ trackerType = trackerTypes[0]#"CSRT"
 
 # Create single tracker object
 trackers=[]
-tracker = createTrackerByName(trackerType)
-trackers.append(tracker)
-trackers.append(tracker)
-trackers.append(tracker)
+#tracker = createTrackerByName(trackerType)
+#trackers.append(tracker)
+# trackers.append(tracker)
+# trackers.append(tracker)
 
-
+# the output will be written to output.avi
+out = cv2.VideoWriter(
+    'output.avi',
+    cv2.VideoWriter_fourcc(*'MJPG'),
+    15.,
+    (640,480))
 
 
 
@@ -149,11 +166,15 @@ while cap.isOpened():
   fps.start()
   success, frame = cap.read()
   frame_counter +=1
+  if(frame_counter==1):
+    frame_height,frame_width = frame.shape[:2]
+  
+    print(frame_height,frame_width)
   
   
   if not success:
     break
-  for i in range(3):
+  for i in range(len(trackers)):
     # get updated location of objects in subsequent frames
     success, box = trackers[i].update(frame)
     #print(len(boxes),frame_counter)
@@ -163,35 +184,60 @@ while cap.isOpened():
         (x, y, w, h) = [int(v) for v in box]
         cv2.rectangle(frame, (x, y), (x + w, y + h),
           (0, 255, 0), 2)
-
-  # show frame
-  cv2.imshow('MultiTracker', frame)
-  cv2.putText(frame,"Hello",
-                    (50,50),cv2.FONT_HERSHEY_SIMPLEX,0.6,(0,0,255),2)
+        midpoint_tracker[i]=x+(w/2)
+        
+ 
   
-  if(frame_counter%12==0):
+  if(frame_counter%1==0):
     #bbox2=(231, 185, 73, 188)
     result = detectObject(frame)
-    if(len(result)>0):
-      #print(result[0],'detecting objects',len(result))
-      x,y,w,h = result[0][0],result[0][1],result[0][2],result[0][3]
-      cv2.rectangle(frame,(x,y),(w,h),(255,255,0),2)
+    print(len(result))
+    visited_closest= []
+    if(len(result)>1):
+      continue
+    for j in range(0,len(result)):
+      
+      x,y,w,h = result[j][0],result[j][1],result[j][2],result[j][3]
+      #cv2.rectangle(frame,(x,y),(w,h),(255,255,0),2)
       colors.append((randint(0, 255), randint(0, 255), randint(0, 255)))
-      del(trackers[0])
-      trackers.append(createTrackerByName(trackerType))
-      if(w-x>0 and h-y >0 and x>0 and y>0):
-        trackers[0].init(frame, (x,y,w-x,h-y))
-      # del multiTracker
-      # multiTracker = cv2.MultiTracker_create()
-      #multiTracker.add(createTrackerByName(trackerType), frame, (x,y,w-x,h-y))
-  
+      midpoint_detector[j]=x+(w-x)/2
+      closest_index = findclosest(midpoint_detector[j],midpoint_tracker,visited_closest)
+      if(closest_index != -1):
+        visited_closest.append(closest_index)
+        del(trackers[closest_index])
+        if(len(trackers) <= 2):
+          trackers.append(createTrackerByName(trackerType))
+          if(w<frame_width and h<frame_height and x<frame_width and y<frame_height and y>0 and w>0 and h>0 and x>0 ):
+            trackers[closest_index].init(frame,(x,y,w-x,h-y))
+      elif(len(trackers) <= 2):
+        trackers.append(createTrackerByName(trackerType))
+        if(w<frame_width and h<frame_height and x<frame_width and y<frame_height and y>0 and w>0 and h>0 and x>0 ):
+          trackers[-1].init(frame,(x,y,w-x,h-y))
+
+
+      # del(trackers[j])
+      # trackers.append(createTrackerByName(trackerType))
+      # if(w-x>0 and h-y >0 and x>0 and y>0):
+      #   trackers[0].init(frame, (x,y,w-x,h-y))
+  print(midpoint_tracker,midpoint_detector)
+  # show frame
+  cv2.imshow('MultiTracker', frame)
   fps.stop()
   print(1/fps.elapsed())
+  frame = cv2.resize(frame, (640, 480),interpolation= cv2.INTER_LINEAR)
+  out.write(frame.astype('uint8'))
+
   
   
-  #cv2.imshow("Image",frame)
+  
   # quit on ESC button
   if cv2.waitKey(1) & 0xFF == 27:  # Esc pressed
     break
+
+# and release the output
+out.release()
+# finally, close the window
+cv2.destroyAllWindows()
+cv2.waitKey(1)
   
   

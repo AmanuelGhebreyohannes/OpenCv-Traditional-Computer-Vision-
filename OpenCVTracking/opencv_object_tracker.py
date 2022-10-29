@@ -70,6 +70,7 @@ while True:
     	# check to see if we are currently tracking an object
 	if initBB is not None:
 		# grab the new bounding box coordinates of the object
+		print(initBB)
 		(success, box) = tracker.update(frame)
 		# check to see if the tracking was a success
 		if success:
