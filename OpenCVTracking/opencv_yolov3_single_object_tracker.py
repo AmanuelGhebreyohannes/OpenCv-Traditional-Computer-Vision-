@@ -192,27 +192,41 @@ while cap.isOpened():
     #bbox2=(231, 185, 73, 188)
     result = detectObject(frame)
     print(len(result))
-    visited_closest= []
     if(len(result)>1):
       continue
+    del(trackers)
+    trackers=[]
     for j in range(0,len(result)):
       
       x,y,w,h = result[j][0],result[j][1],result[j][2],result[j][3]
-      #cv2.rectangle(frame,(x,y),(w,h),(255,255,0),2)
-      colors.append((randint(0, 255), randint(0, 255), randint(0, 255)))
-      midpoint_detector[j]=x+(w-x)/2
-      closest_index = findclosest(midpoint_detector[j],midpoint_tracker,visited_closest)
-      if(closest_index != -1):
-        visited_closest.append(closest_index)
-        del(trackers[closest_index])
-        if(len(trackers) <= 2):
-          trackers.append(createTrackerByName(trackerType))
-          if(w<frame_width and h<frame_height and x<frame_width and y<frame_height and y>0 and w>0 and h>0 and x>0 ):
-            trackers[closest_index].init(frame,(x,y,w-x,h-y))
-      elif(len(trackers) <= 2):
-        trackers.append(createTrackerByName(trackerType))
-        if(w<frame_width and h<frame_height and x<frame_width and y<frame_height and y>0 and w>0 and h>0 and x>0 ):
-          trackers[-1].init(frame,(x,y,w-x,h-y))
+      if(w<frame_width and h<frame_height and x<frame_width and y<frame_height and y>0 and w>0 and h>0 and x>0 ):
+        tracker = createTrackerByName(trackerType)
+        trackers.append(tracker)
+        trackers[j].init(frame,(x,y,w-x,h-y))
+
+    
+      
+    
+    # visited_closest= []
+    
+    # for j in range(0,len(result)):
+      
+    #   x,y,w,h = result[j][0],result[j][1],result[j][2],result[j][3]
+    #   #cv2.rectangle(frame,(x,y),(w,h),(255,255,0),2)
+    #   colors.append((randint(0, 255), randint(0, 255), randint(0, 255)))
+    #   midpoint_detector[j]=x+(w-x)/2
+    #   closest_index = findclosest(midpoint_detector[j],midpoint_tracker,visited_closest)
+    #   if(closest_index != -1):
+    #     visited_closest.append(closest_index)
+    #     del(trackers[closest_index])
+    #     if(len(trackers) <= 2):
+    #       trackers.append(createTrackerByName(trackerType))
+    #       if(w<frame_width and h<frame_height and x<frame_width and y<frame_height and y>0 and w>0 and h>0 and x>0 ):
+    #         trackers[closest_index].init(frame,(x,y,w-x,h-y))
+    #   elif(len(trackers) <= 2):
+    #     trackers.append(createTrackerByName(trackerType))
+    #     if(w<frame_width and h<frame_height and x<frame_width and y<frame_height and y>0 and w>0 and h>0 and x>0 ):
+    #       trackers[-1].init(frame,(x,y,w-x,h-y))
 
 
       # del(trackers[j])
