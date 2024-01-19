@@ -1,2 +1,6 @@
 KU_Tests/
 venv/
+.vscode/
+*/*.jp*g
+*/*.png
+*/*.npz

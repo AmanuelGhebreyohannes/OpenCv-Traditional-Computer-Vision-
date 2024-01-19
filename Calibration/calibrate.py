@@ -56,3 +56,11 @@ for i in range(len(objpoints)):
 
 print("total error: ", mean_error/len(objpoints))
 
+
+#save the camera matrix and distortion matrix
+np.savez("data.npz", mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs)
+npzfile = np.load('data.npz')
+print(npzfile.files)
+
+
+
